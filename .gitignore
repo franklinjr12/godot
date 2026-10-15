@@ -396,3 +396,6 @@ $RECYCLE.BIN/
 *.msp
 *.lnk
 *.generated.props
+
+# Local encryption keys and custom templates
+/.encryption/
