@@ -1,136 +1,152 @@
-# Encrypted exports for Beach Volleyball VR
+# Encrypted Windows and Quest exports
 
-This fork uses **Godot 4.7.2 stable**, upstream commit
-`ed1daf0bf001b61586d9930840f2f1394092c079`, matching the game's installed editor.
-The engine's existing AES-256 PCK encryption is used without changes to gameplay
-or the engine's encryption algorithm.
+This fork pins **Godot 4.7.2 stable**, upstream commit
+`ed1daf0bf001b61586d9930840f2f1394092c079`. It uses Godot's existing AES-256 PCK
+encryption without changing gameplay or the engine's encryption algorithm.
 
-## Everyday use
+## Set up another Windows machine without rebuilding
 
-Double-click **`C:\Repos\godot\EncryptedExports.bat`**.
+1. Download and extract the small **export-launcher ZIP** from Releases, or clone
+   this fork's default branch wherever you prefer. Install **Python 3.11+
+   for Windows x64**, the **Godot 4.7.2 stable editor**, **JDK 17**, and Android
+   SDK tools for the Quest workflow. No C++ compiler or SCons is needed when
+   importing these prebuilt templates.
+2. Open `EncryptedExports.bat` in your chosen checkout. Choose **6** and enter
+   this machine's game folder, editor executable, Android SDK, and JDK paths.
+   The optional separate Android source checkout is only needed when rebuilding.
+3. Download the `.gdtbundle` asset from this fork's
+   [Releases](https://github.com/franklinjr12/godot/releases), together with its
+   SHA-256 checksum. The bundle includes both Windows x86_64 templates, Quest
+   ARM64 APK templates, the matching Android Gradle/AAR source bundle, and licenses.
+4. Obtain the private transfer password from the original build machine: open
+   its launcher and choose **8**. Save it in your password manager and transfer
+   it privately. Do not post it on GitHub or in chat.
+5. On the new machine choose **7**, enter the downloaded file path, and paste
+   the transfer password into the hidden prompt. Import validates the files,
+   protects the matching game key for the new Windows account, installs the
+   templates, and configures the game's encrypted presets. No native rebuild runs.
+6. Choose **3**, select Debug or Release, then select the game preset.
+   Quest store release exports still require your release signing keystore;
+   Debug exports use debug signing.
 
-1. Choose **3** to export with the current local key. Pick the preset by number.
-2. Choose **4** to open the editor with that key available to its export process.
-   Close other editor instances for this project before launching this way.
-3. To supply your own key, choose **1** and paste **64 hexadecimal characters**
-   into the hidden prompt. Blank input generates a random 256-bit key.
-4. After changing a key, choose **2**. This rebuilds both Windows x86_64 and Quest
-   ARM64 debug/release templates and configures the game. Compilation takes time;
-   subsequent builds reuse SCons' compilation cache.
+The fork is public, so its prebuilt templates are distributed in a
+**password-protected download**, not as exposed binaries containing the active
+game key. The download uses AES-256-GCM with an Argon2id-derived key and includes
+authenticated file checksums. The randomly generated transfer password stays
+DPAPI-protected on the originating machine. It is different from the game key.
+The import/export commands install `cryptography==50.0.2` and its dependencies
+under the ignored `.encryption/python-deps` folder when first needed; this requires
+internet access once. They do not install packages globally.
 
-The game gets additional presets ending in **` (Encrypted)`**, covering all its
-Windows presets and its three Quest presets (standard, full release, demo).
-The original presets remain available. Outputs use an `encrypted` subfolder
-under each original export folder; debug exports from the launcher add `-debug`
-to the file name. Demo features and XR settings are inherited.
-Linux, WebXR and other standalone headsets are outside this setup.
+## Paths belong to each machine
 
-The key field in the stock editor can appear empty and show a validation message.
-The launcher supplies `GODOT_SCRIPT_ENCRYPTION_KEY`, which Godot 4.7.2 uses in
-preference to that field. For a checked export, use menu **3**. Exporting an
-encrypted preset from an editor started normally will not receive this key.
-Do not enter the key into a tracked configuration file.
+There is no required checkout location or drive letter.
 
-## Command line
+- Menu **6** / `EncryptedExports.bat machine` saves project, editor, Java, SDK,
+  optional Android engine checkout, and build parallelism in the ignored
+  `.encryption/settings.json`. Updating these paths never changes the game key.
+  Portable Godot editor layouts are detected; `machine --editor-settings` can
+  override the editor settings file for other custom layouts.
+- Python is selected with `EncryptedExports.bat python`, saved in the ignored
+  `.encryption/python.path`. Alternatively set `GODOT_ENCRYPTION_PYTHON` to the
+  full executable path. The launcher also detects a checkout-local `.venv`,
+  `py -3`, or `python` on PATH. Python must be at least 3.11.
+- The game's tracked encrypted presets use only project-relative template paths:
+  `res://.encrypted-exports/templates/...`. Configuration copies the matching
+  templates there, and installs Gradle sources under `res://android/encrypted/build`.
+  Both locations are ignored by Git and excluded from resource import.
+- Each clone regenerates its local template identifier and preserves the original
+  presets, features, XR settings, and signing-credential mapping. A clone containing
+  existing managed encrypted presets can adopt them without duplicating entries.
+- After moving a checkout or game folder, run menu **6**, then `configure`.
+  Existing imported templates can be reused without rebuilding.
 
-From this repository:
+The game also includes `scripts/encrypted_exports.ps1`. Run it with `-Configure`
+to choose the fork checkout for that machine and configure its tools. It remembers
+the fork location in the game's ignored `.encrypted-exports/machine.json`.
+Run it again without arguments to open the launcher.
+
+## Everyday use and rebuilding
+
+- **1:** Enter a new 64-character hexadecimal game key, or generate one with
+  blank input. Back up a key you provide in your password manager.
+- **2:** Compile Windows and Quest debug/release templates, then configure the
+  game. Required after changing the game key unless importing a matching bundle.
+- **3:** Export and check an encrypted game package.
+- **4:** Open the editor with the saved export key. Close other editor instances
+  for the same project first.
+- **5:** Exit. **6:** Machine paths. **7:** Import release. **8:** Private transfer password.
+
+Original game presets are preserved. Additional presets end in ` (Encrypted)`
+and cover all Windows presets and the three Quest presets. Outputs use an
+`encrypted` subfolder under the original export folder. Debug outputs add `-debug`
+to their filename. Demo features and existing OpenXR configuration are inherited.
+Linux, WebXR, Pico and other headset targets are outside this setup.
+
+The stock editor's key field may appear empty: the launcher supplies
+`GODOT_SCRIPT_ENCRYPTION_KEY` to the export process. Prefer menu **3** for verified
+exports and signing-credential mapping. Signing credentials are read privately
+from the corresponding original preset, without copying them into tracked files.
+Persistent Gradle daemons are disabled for child exports so the Windows console
+wrapper exits cleanly after Android builds.
 
 ```bat
-EncryptedExports.bat build
+EncryptedExports.bat machine
+EncryptedExports.bat import-bundle --file "PATH_TO_DOWNLOADED_FILE.gdtbundle"
 EncryptedExports.bat configure
-EncryptedExports.bat verify
 EncryptedExports.bat export --preset "Windows SteamVR Release (Encrypted)"
 EncryptedExports.bat export --preset "Android Quest Release (Encrypted)" --debug
+EncryptedExports.bat verify
 ```
 
-`export` defaults to a release export; Android release signing still requires
-your release keystore and its credentials. `--debug` uses debug signing and the
-debug template. Encryption keys and signing keys have different purposes.
-The launcher does not invent or replace a store signing identity.
-For Quest exports through menu **3**, existing signing credentials are read
-privately from the matching original preset and passed to Godot in the export
-process environment. They are never copied into the tracked preset file.
-Use menu **3** for Android exports to retain this signing-credential mapping.
-
-## Key storage and limits
-
-The key is stored in `.encryption/key.dpapi` using Windows DPAPI CurrentUser.
-The key directory and both engine source/build folders have access restricted
-to the current Windows account and SYSTEM, including inherited build files.
-It is ignored by Git. Previous protected keys are retained in `.encryption/keys`;
-templates are grouped by a non-secret key fingerprint. Back up the key you
-provide using a password manager. A DPAPI file alone is not a portable backup
-for a different Windows installation or account. The generated initial key can
-be replaced with one you have backed up, using menu **1**, then **2**.
-
-No key is placed in this repository's tracked files, shell arguments, global
-environment variables, or GitHub Actions. The launcher sets process-local
-environment variables only for compilation/export and editor launch.
-Godot's generated C++ key source, object files, SCons signature database and
-compiled templates necessarily contain key material; keep this build checkout
-private on disk and never share build intermediates. Git ignores these files.
-DPAPI protects the saved key at rest; it does not protect it from software
-already running under your Windows account.
-
-Encryption makes extraction harder; it cannot prevent a determined reverse
-engineer from recovering the key from a shipped executable or Android library.
-Embedding a PCK changes packaging and does not add cryptographic protection.
-All packaged resources (`*`) and the PCK directory are encrypted here; scripts
-use compressed binary tokens. Native extensions remain native binaries.
-
-## How Quest Gradle exports work
-
-Android templates include the engine compiled with the same key for ARM64.
-The build generates `android_debug.apk`, `android_release.apk` and
-`android_source.zip`, including the matching AAR files. Configuration installs
-that source ZIP under the game's ignored `android/encrypted-<key-id>/build`
-directory and writes Godot's required `.build_version` identifier. This prevents
-the Gradle build from quietly using an ordinary, unencrypted engine AAR.
-No default templates are overwritten.
-
-Machine-specific settings live in `.encryption/settings.json`. After moving the
-checkout, update these settings, run `build`, then `configure`. Configuration
-backs up `export_presets.cfg` before adding/updating the managed presets.
-Changing key invalidates the launcher's old configuration until rebuilding and
-configuring are complete. Never rotate keys while a build or export is running.
-This machine also uses a matching Android source checkout at
-`C:\Repos\godot-build-tools\android-source` to keep its native build cache
-separate from Windows. Its location is saved as `android_source` in the local
-settings; it shares the same pinned engine source and contains no engine edits.
-
-## Build prerequisites
-
-This computer was set up with Git, Python 3.14, an isolated environment at
-`C:\Repos\godot-build-tools\python` with SCons 4.10.1, Visual Studio 2022 C++
-Build Tools and Windows SDK, Temurin JDK 17, Android command-line tools, Android
-SDK platform 36, build tools 36.1.0, and NDK 29.0.14206865. The game may also need
-platform/build-tools versions specified in its Android presets.
-Godot's official D3D12 build dependencies and Swappy frame pacing dependency
-are installed. Vulkan, OpenGL, OpenXR and D3D12 support are retained.
-The Windows templates exclude the optional AccessKit screen-reader integration
-and ANGLE translation layer (`accesskit=no angle=no`); native OpenGL is included.
-Debug templates use Godot's single compilation unit build option with a limit
-of eight source files per unit to reduce compilation overhead.
-
-Initial setup is reproducible with the installed tools:
+For rebuilding, use Visual Studio 2022 C++ Build Tools / Windows SDK, SCons 4.10.1
+in your chosen Python environment, JDK 17, Android SDK platform 36, build tools
+36.1.0, and NDK 29.0.14206865. Install additional SDK versions required by your
+game's presets. Install Godot's official D3D12 and Swappy dependencies using the
+upstream `misc/scripts` installers. Windows excludes optional AccessKit and ANGLE;
+native OpenGL, Vulkan, OpenXR and D3D12 remain available. Builds use
+`production=yes lto=none debug_symbols=no`; debug uses SCU with eight files per unit.
+`--jobs` on the `machine` command sets build parallelism.
+The official Agility SDK location follows the current Windows user's LocalAppData;
+`machine --d3d12-sdk` can override its location when rebuilding. Release bundles
+include the Godot/third-party notices and Microsoft's original Agility SDK notices.
+Rebuilding requires the full source clone; the small launcher ZIP supports prebuilt
+import and export without downloading the engine sources.
 
 ```bat
-EncryptedExports.bat setup --godot "%USERPROFILE%\Documents\Godot\Godot_console.exe" --android-sdk "C:\Repos\godot-build-tools\android-sdk" --java-home "PATH_TO_JDK_17" --project "C:\Repos\BeachVolleyballVr" --jobs 3
 EncryptedExports.bat build
 EncryptedExports.bat verify
 EncryptedExports.bat configure
+EncryptedExports.bat bundle
 ```
 
-`verify` exports a tiny test project with encrypted resources, runs both Windows
-templates, checks the encrypted directory flag and confirms a different key is
-rejected. Its report is `.encryption/verification.json`.
+`bundle` creates only a password-protected release asset plus a public checksum.
+It includes the matching game key inside the encrypted payload so another Windows
+account can protect its own copy. Never upload the `.encryption` directory,
+unprotected templates, generated C++ key source, build caches, DPAPI files,
+machine settings, transfer passwords, or signing credentials.
 
-## Sources
+## Protection limits and validation
 
-- [Godot PCK encryption](https://docs.godotengine.org/en/4.7/engine_details/development/compiling/compiling_with_script_encryption_key.html)
-- [Building Android templates](https://docs.godotengine.org/en/4.7/engine_details/development/compiling/compiling_for_android.html)
-- [Building Windows templates](https://docs.godotengine.org/en/4.7/engine_details/development/compiling/compiling_for_windows.html)
-- Exact behavior was also checked against this checkout's
-  `editor/export/editor_export_platform.cpp`,
-  `editor/export/export_template_manager.cpp` and
-  `platform/android/export/export_plugin.cpp`.
+The saved game key uses Windows DPAPI CurrentUser. Source/build checkouts and
+local template directories are restricted to the current account and SYSTEM.
+A DPAPI file alone cannot migrate the key to another account or installation;
+use the protected release import or enter the original key privately.
+DPAPI does not protect against software already running as your Windows user.
+
+All packaged resources and the PCK directory are encrypted; scripts use compressed
+binary tokens. Native extensions remain native binaries. A determined reverse
+engineer can still recover a key from shipped runtime binaries. Embedding the
+PCK changes packaging and adds no cryptographic strength.
+
+`verify` runs both Windows templates with an encrypted fixture and rejects a pack
+made with a different key. Reports remain under ignored `.encryption` files.
+Headless and desktop checks do not establish Quest tracking, rendering, gameplay,
+or performance; test those on a Quest 3 before shipping.
+
+## References
+
+- [Godot encryption](https://docs.godotengine.org/en/4.7/engine_details/development/compiling/compiling_with_script_encryption_key.html)
+- [Android compilation](https://docs.godotengine.org/en/4.7/engine_details/development/compiling/compiling_for_android.html)
+- [Windows compilation](https://docs.godotengine.org/en/4.7/engine_details/development/compiling/compiling_for_windows.html)
+- [Cryptography authenticated encryption](https://cryptography.io/en/latest/hazmat/primitives/aead/)

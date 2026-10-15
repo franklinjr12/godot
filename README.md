@@ -1,4 +1,4 @@
-> **Beach Volleyball VR encrypted exports:** This fork pins Godot 4.7.2. Start with [ENCRYPTED_EXPORTS.md](ENCRYPTED_EXPORTS.md) and run `EncryptedExports.bat` on your configured build computer.
+> **Beach Volleyball VR encrypted exports:** This fork pins Godot 4.7.2. Start with [ENCRYPTED_EXPORTS.md](ENCRYPTED_EXPORTS.md) for per-machine setup and protected prebuilt downloads; run `EncryptedExports.bat` from your chosen checkout.
 
 # Godot Engine
 
