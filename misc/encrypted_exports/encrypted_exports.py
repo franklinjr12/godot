@@ -78,6 +78,9 @@ def environment(settings, key):
     env['ANDROID_HOME'] = settings['android_sdk']
     env['JAVA_HOME'] = settings['java_home']
     env['PATH'] = os.pathsep.join([str(Path(sys.executable).parent), str(Path(settings['java_home']) / 'bin'), env['PATH']])
+    # A persistent Gradle daemon can inherit the Windows console wrapper's pipes
+    # and keep it alive after Godot exits. Use a single-use daemon for exports.
+    env['GRADLE_OPTS'] = (env.get('GRADLE_OPTS', '') + ' -Dorg.gradle.daemon=false').strip()
     return env
 
 

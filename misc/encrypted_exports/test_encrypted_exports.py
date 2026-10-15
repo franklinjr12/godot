@@ -2,6 +2,7 @@
 import argparse
 import importlib.util
 import json
+import os
 from pathlib import Path
 import secrets
 import tempfile
@@ -15,6 +16,17 @@ spec.loader.exec_module(ee)
 
 
 class EncryptionSetupTests(unittest.TestCase):
+    def test_child_environment_keeps_key_local_and_disables_persistent_gradle(self):
+        key = secrets.token_hex(32)
+        settings = {'java_home': 'C:/fixture/jdk', 'android_sdk': 'C:/fixture/sdk'}
+        with patch.dict(os.environ, {'GRADLE_OPTS': '-Xmx64m'}):
+            before = os.environ.copy()
+            env = ee.environment(settings, key)
+            self.assertEqual(env['SCRIPT_AES256_ENCRYPTION_KEY'], key)
+            self.assertEqual(env['GODOT_SCRIPT_ENCRYPTION_KEY'], key)
+            self.assertEqual(env['GRADLE_OPTS'], '-Xmx64m -Dorg.gradle.daemon=false')
+            self.assertEqual(dict(os.environ), before)
+
     def test_dpapi_round_trip(self):
         key = secrets.token_bytes(32)
         protected = ee.dpapi(key)
