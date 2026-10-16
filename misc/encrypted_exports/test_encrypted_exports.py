@@ -5,6 +5,8 @@ import json
 import os
 from pathlib import Path
 import secrets
+import shutil
+import subprocess
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -16,6 +18,22 @@ spec.loader.exec_module(ee)
 
 
 class EncryptionSetupTests(unittest.TestCase):
+    @unittest.skipUnless(shutil.which('git'), 'Git is needed for the fresh-checkout ignore check')
+    def test_sensitive_folders_ignore_themselves_in_a_fresh_repository(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            subprocess.run(['git', 'init', '--quiet', str(root)], check=True)
+            files = ['.encryption/key.dpapi', '.encrypted-exports/machine.json',
+                     '.encrypted-exports/templates/engine.exe', 'android/encrypted/build/engine.aar']
+            for name in ['.encryption', '.encrypted-exports', 'android/encrypted']:
+                ee.ignored_directory(root / name)
+            for name in files:
+                path = root / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes(b'private test fixture')
+                result = subprocess.run(['git', 'check-ignore', '--no-index', name], cwd=root, capture_output=True)
+                self.assertEqual(result.returncode, 0, name)
+
     def test_child_environment_keeps_key_local_and_disables_persistent_gradle(self):
         key = secrets.token_hex(32)
         settings = {'java_home': 'C:/fixture/jdk', 'android_sdk': 'C:/fixture/sdk'}

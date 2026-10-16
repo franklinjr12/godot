@@ -107,8 +107,14 @@ def check_pin():
     run(['git', 'merge-base', '--is-ancestor', PIN, sha])
 
 
+def ignored_directory(path):
+    path.mkdir(parents=True, exist_ok=True)
+    (path / '.gitignore').write_text('*\n', encoding='ascii')
+    return path
+
+
 def protect_local(*directories):
-    STATE.mkdir(exist_ok=True)
+    ignored_directory(STATE)
     sid = subprocess.check_output(['whoami', '/user', '/fo', 'csv', '/nh'], text=True).strip().split(',')[-1].strip('"')
     for directory in directories:
         run(['icacls', directory, '/inheritance:r', '/grant:r', f'*{sid}:(OI)(CI)F', '*S-1-5-18:(OI)(CI)F'])
@@ -166,7 +172,7 @@ def machine(args):
 def save_key(key):
     if not re.fullmatch('[0-9a-f]{64}', key):
         raise RuntimeError('Key must contain exactly 64 hexadecimal characters.')
-    STATE.mkdir(exist_ok=True)
+    ignored_directory(STATE)
     protected = dpapi(key.encode('ascii'))
     (STATE / 'keys').mkdir(exist_ok=True)
     if (STATE / 'key.dpapi').is_file():
@@ -299,7 +305,7 @@ def configure(args):
     verify_android_templates(dest, key)
     project = Path(settings['project'])
     local = project / '.encrypted-exports'
-    local.mkdir(exist_ok=True)
+    ignored_directory(local)
     protect_local(local)
     (local / '.gdignore').touch()
     installed = local / 'templates'
@@ -315,6 +321,8 @@ def configure(args):
     backup.parent.mkdir(exist_ok=True)
     backup.write_text(original, encoding='utf-8')
     android_parent = project / 'android' / 'encrypted'
+    ignored_directory(android_parent)
+    protect_local(android_parent)
     android_build = android_parent / 'build'
     source_zip = dest / 'android_source.zip'
     android_build.mkdir(parents=True, exist_ok=True)

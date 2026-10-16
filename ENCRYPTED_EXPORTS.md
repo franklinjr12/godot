@@ -55,6 +55,9 @@ There is no required checkout location or drive letter.
   `res://.encrypted-exports/templates/...`. Configuration copies the matching
   templates there, and installs Gradle sources under `res://android/encrypted/build`.
   Both locations are ignored by Git and excluded from resource import.
+  Local state/template directories also create their own `.gitignore` files, so
+  fresh game checkouts and launcher downloads inside another repository stay safe
+  even before the game's root ignore rules are committed.
 - Each clone regenerates its local template identifier and preserves the original
   presets, features, XR settings, and signing-credential mapping. A clone containing
   existing managed encrypted presets can adopt them without duplicating entries.

@@ -87,6 +87,7 @@ if not exist "%PYTHON%" exit /b 1
 "%PYTHON%" -c "import sys; sys.exit(0 if sys.version_info >= (3,11) else 1)" >nul 2>nul
 if errorlevel 1 exit /b 1
 if not exist "%~dp0.encryption" mkdir "%~dp0.encryption"
+>"%~dp0.encryption\.gitignore" echo *
 >"%~dp0.encryption\python.path" <nul set /p "=%PYTHON%"
 echo Python choice saved for this checkout. Open the launcher again.
 exit /b 0
